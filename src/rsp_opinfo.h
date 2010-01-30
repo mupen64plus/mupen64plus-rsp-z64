@@ -1,10 +1,10 @@
 #include "rsp.h"
 
 struct rsp_regmask_t {
-  //UINT32 r;
-  UINT8 v[32];
-  UINT32 accu;
-  UINT8 flag;
+    //UINT32 r;
+    UINT8 v[32];
+    UINT32 accu;
+    UINT8 flag;
 };
 
 #define RSP_GET_REG_I(i, R)   ( (i).r & (1<<(R)) )
@@ -29,11 +29,11 @@ struct rsp_regmask_t {
 #define RSP_OPINFO_LINK  8
 #define RSP_OPINFO_USEPC 16
 struct rsp_opinfo_t {
-  UINT32        op;   // original opcode
-  int           op2;  // simplified opcode
-  rsp_regmask_t used;
-  rsp_regmask_t set;
-  int           flags;
+    UINT32        op;   // original opcode
+    int           op2;  // simplified opcode
+    rsp_regmask_t used;
+    rsp_regmask_t set;
+    int           flags;
 };
 
 void rsp_get_opinfo(UINT32 op, rsp_opinfo_t * info);

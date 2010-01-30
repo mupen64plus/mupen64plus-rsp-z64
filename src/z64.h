@@ -19,7 +19,7 @@
 #define SP_STATUS_DMAFULL               0x0008
 #define SP_STATUS_IOFULL                0x0010
 #define SP_STATUS_SSTEP                 0x0020
-#define SP_STATUS_INTR_BREAK    0x0040
+#define SP_STATUS_INTR_BREAK            0x0040
 #define SP_STATUS_SIGNAL0               0x0080
 #define SP_STATUS_SIGNAL1               0x0100
 #define SP_STATUS_SIGNAL2               0x0200
@@ -35,9 +35,9 @@
 #define DP_STATUS_START_GCLK            0x008
 #define DP_STATUS_TMEM_BUSY             0x010
 #define DP_STATUS_PIPE_BUSY             0x020
-#define DP_STATUS_CMD_BUSY                      0x040
+#define DP_STATUS_CMD_BUSY              0x040
 #define DP_STATUS_CBUF_READY            0x080
-#define DP_STATUS_DMA_BUSY                      0x100
+#define DP_STATUS_DMA_BUSY              0x100
 #define DP_STATUS_END_VALID             0x200
 #define DP_STATUS_START_VALID           0x400
 
@@ -46,13 +46,13 @@
 
 #define LSB_FIRST 1 // TODO : check for platform
 #ifdef LSB_FIRST
-        #define BYTE_ADDR_XOR           3
-        #define WORD_ADDR_XOR           1
-        #define BYTE4_XOR_BE(a)         ((a) ^ 3)                               /* read/write a byte to a 32-bit space */
+    #define BYTE_ADDR_XOR           3
+    #define WORD_ADDR_XOR           1
+    #define BYTE4_XOR_BE(a)         ((a) ^ 3)           /* read/write a byte to a 32-bit space */
 #else
-        #define BYTE_ADDR_XOR           0
-        #define WORD_ADDR_XOR           0
-        #define BYTE4_XOR_BE(a)         (a)
+    #define BYTE_ADDR_XOR           0
+    #define WORD_ADDR_XOR           0
+    #define BYTE4_XOR_BE(a)         (a)
 #endif
 
 
