@@ -1,6 +1,7 @@
 #/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 # *   mupen64plus-rsp-z64 - Makefile                                        *
-# *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
+# *   http://bitbucket.org/wahrhaft/mupen64plus-rsp-z64/                    *
+# *   Copyright (C) 2010 Jon Ring                                           *
 # *   Copyright (C) 2008-2009 Richard Goedeken                              *
 # *   Copyright (C) 2007-2008 DarkJeztr Tillin9                             *
 # *                                                                         *
@@ -19,7 +20,7 @@
 # *   Free Software Foundation, Inc.,                                       *
 # *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
 # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-# Makefile for Mupen64 HLE RSP plugin in Mupen64plus.
+# Makefile for Z64 RSP plugin in Mupen64plus.
 
 # detect operating system
 UNAME = $(shell uname -s)
@@ -188,7 +189,7 @@ $(shell mkdir -p $(OBJDIRS))
 TARGET = mupen64plus-rsp-z64.$(SO_EXTENSION)
 
 targets:
-	@echo "Mupen64Plus-rsp-hle makefile. "
+	@echo "Mupen64Plus-rsp-z64 makefile. "
 	@echo "  Targets:"
 	@echo "    all           == Build Mupen64Plus rsp-hle plugin"
 	@echo "    clean         == remove object files"
