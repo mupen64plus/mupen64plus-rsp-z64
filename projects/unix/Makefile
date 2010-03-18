@@ -80,6 +80,7 @@ endif
 
 # base CFLAGS, LIBS, and LDFLAGS
 CFLAGS += -ffast-math -funroll-loops -fexpensive-optimizations -fno-strict-aliasing -I../../src
+CXXFLAGS += -fvisibility-inlines-hidden
 LDFLAGS += -ldl
 
 # Since we are building a shared library, we must compile with -fPIC for x86_64 CPUs.
