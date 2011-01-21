@@ -114,7 +114,7 @@ extern "C" {
             *PluginType = M64PLUGIN_RSP;
 
         if (PluginVersion != NULL)
-            *PluginVersion = 0x016301;
+            *PluginVersion = 0x016304;
 
         if (APIVersion != NULL)
             *APIVersion = PLUGIN_API_VERSION;
