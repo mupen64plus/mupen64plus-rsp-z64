@@ -232,7 +232,7 @@ static void rsp_gen(int pc)
                 if (!nop) {
                     bc[lbc].op = op;
                     bc[lbc].op2 = info.op2;
-                    bc[lbc].flags = info.flags | ((pc&0xffc)<<5-2) | (!cont? (1<<15):0);
+                    bc[lbc].flags = info.flags | (((pc&0xffc)<<5)-2) | (!cont? (1<<15):0);
                     lbc++;
                 }
                 loopc = (pc+4)&0xfff;
