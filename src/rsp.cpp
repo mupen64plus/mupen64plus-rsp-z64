@@ -320,53 +320,6 @@ void rsp_init(RSP_INFO info)
     rsp.step_count=0;
 }
 
-static void rsp_exit(void)
-{
-#if SAVE_DISASM
-    {
-        char string[200];
-        int i;
-        FILE *dasm;
-        dasm = fopen("rsp_disasm.txt", "wt");
-
-        for (i=0; i < 0x1000; i+=4)
-        {
-            UINT32 opcode = ROPCODE(0x04001000 + i);
-            rsp_dasm_one(string, 0x04001000 + i, opcode);
-            fprintf(dasm, "%08X: %08X   %s\n", 0x04001000 + i, opcode, string);
-        }
-        fclose(dasm);
-    }
-#endif
-#if SAVE_DMEM
-    {
-        /*int i;
-        FILE *dmem;
-        dmem = fopen("rsp_dmem.txt", "wt");
-
-        for (i=0; i < 0x1000; i+=4)
-        {
-        fprintf(dmem, "%08X: %08X\n", 0x04000000 + i, READ32(0x04000000 + i));
-        }
-        fclose(dmem);*/
-
-        int i;
-        FILE *dmem;
-        dmem = fopen("rsp_dmem.bin", "wb");
-
-        for (i=0; i < 0x1000; i++)
-        {
-            fputc(READ8(0x04000000 + i), dmem);
-        }
-        fclose(dmem);
-    }
-#endif
-
-#if LOG_INSTRUCTION_EXECUTION
-    fclose(exec_output);
-#endif
-}
-
 void rsp_reset(void)
 {
     rsp.nextpc = ~0;
@@ -2880,21 +2833,6 @@ int rsp_execute(int cycles)
 }
 
 /*****************************************************************************/
-
-static void rsp_get_context(void *dst)
-{
-    /* copy the context */
-    if (dst)
-        *(RSP_REGS *)dst = rsp;
-}
-
-
-static void rsp_set_context(void *src)
-{
-    /* copy the context */
-    if (src)
-        rsp = *(RSP_REGS *)src;
-}
 
 
 
