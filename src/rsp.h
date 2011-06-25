@@ -22,6 +22,7 @@
 #ifndef _RSP_H_
 #define _RSP_H_
 
+#define M64P_PLUGIN_PROTOTYPES 1
 #include "m64p_types.h"
 #include "m64p_plugin.h"
 #include "z64.h"
