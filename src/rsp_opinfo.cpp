@@ -88,7 +88,6 @@ void rsp_get_opinfo(UINT32 op, rsp_opinfo_t * info)
     info->flags = 0;
 
     int dest = (op >> 16) & 0x1f;
-    int base = (op >> 21) & 0x1f;
     int index = (op >> 7) & 0xf;
     int offset = (op & 0x7f);
     if (offset & 0x40)
@@ -296,7 +295,7 @@ void rsp_get_opinfo(UINT32 op, rsp_opinfo_t * info)
             //
             // Stores one element from maximum of 8 vectors, while incrementing element index
 
-            int element, eaoffset;
+            int element;
             int vs = dest;
             int ve = dest + 8;
             if (ve > 32)
