@@ -37,8 +37,8 @@ struct opinfo_t {
     int visit, labeled;
     int label;
 
-    int nbgen;
-    int szgen;
+    unsigned int nbgen;
+    unsigned int szgen;
     gen_t * gentable;
     gen_t * curgen;
 };
@@ -50,9 +50,9 @@ struct branch_t {
 static int curvisit;
 static opinfo_t opinfo[0x1000/4];
 static int jumps[0x1000];
-static int nb_branches;
+static unsigned int nb_branches;
 static branch_t branches[256];
-static int nb_labels;
+static unsigned int nb_labels;
 static int labels[256];
 
 #define OPI(pc) opinfo[(pc)>>2]
@@ -153,7 +153,7 @@ static UINT32 prep_gen(int pc, UINT32 crc, int & len)
 
 static void rsp_gen(int pc)
 {
-    int i;
+    unsigned int i;
 
     curvisit++;
     if (!curvisit) {
@@ -197,7 +197,7 @@ static void rsp_gen(int pc)
     opi->curgen = gen;
 
     // convert to bytecode
-    int lbc = 0;
+    unsigned int lbc = 0;
     static rsp_bc_t bc[0x1000*2+10];
     for (i=0; i<nb_branches; i++) {
         int pc;
@@ -561,10 +561,10 @@ int rsp_jump(int pc)
     int res = run(rsp, gen);
 
     //fprintf(stderr, "r31 %x from %x nextpc %x pc %x res %d (%s)\n", rsp.r[31], pc, rsp.nextpc, sp_pc, res, gen->name);
-    if (rsp.nextpc != ~0)
+    if (rsp.nextpc != ~0U)
     {
         sp_pc = (rsp.nextpc & 0xfff);
-        rsp.nextpc = ~0;
+        rsp.nextpc = ~0U;
     }
     else
     {

@@ -316,14 +316,14 @@ void rsp_init(RSP_INFO info)
     rsp.ext = info;
 
     sp_pc = 0; //0x4001000;
-    rsp.nextpc = ~0;
+    rsp.nextpc = ~0U;
     //rsp_invalidate(0, 0x1000);
     rsp.step_count=0;
 }
 
 void rsp_reset(void)
 {
-    rsp.nextpc = ~0;
+    rsp.nextpc = ~0U;
 }
 
 void handle_lwc2(UINT32 op)
@@ -2406,7 +2406,7 @@ void handle_vector_ops(UINT32 op)
 
             int del = (VS1REG & 7);
             int sel = VEC_EL_2(EL, del);
-            INT32 sqr;
+            UINT32 sqr;
 
             sqr = (UINT16)(VREG_S(VS2REG, sel)) | ((UINT32)(rsp.square_root_high) << 16);
 
@@ -2533,10 +2533,10 @@ int rsp_execute(int cycles)
         GENTRACE("%2x %3x\t%s\n", ((UINT8*)rsp_dmem)[0x1934], sp_pc, s);
 #endif
 
-        if (rsp.nextpc != ~0)///DELAY SLOT USAGE
+        if (rsp.nextpc != ~0U)///DELAY SLOT USAGE
         {
             sp_pc = /*0x4001000 | */(rsp.nextpc & 0xfff); //rsp.nextpc;
-            rsp.nextpc = ~0;
+            rsp.nextpc = ~0U;
         }
         else
         {
