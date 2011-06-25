@@ -23,6 +23,9 @@
 #include <assert.h>
 #include <stdarg.h>
 
+#define RSP_Z64_VERSION        0x016304
+#define RSP_PLUGIN_API_VERSION 0x020000
+
 static void (*l_DebugCallback)(void *, int, const char *) = NULL;
 static void *l_DebugCallContext = NULL;
 static bool l_PluginInit = false;
@@ -114,10 +117,10 @@ extern "C" {
             *PluginType = M64PLUGIN_RSP;
 
         if (PluginVersion != NULL)
-            *PluginVersion = 0x016304;
+            *PluginVersion = RSP_Z64_VERSION;
 
         if (APIVersion != NULL)
-            *APIVersion = PLUGIN_API_VERSION;
+            *APIVersion = RSP_PLUGIN_API_VERSION;
 
         if (PluginNamePtr != NULL)
             *PluginNamePtr = "Z64 RSP Plugin";
