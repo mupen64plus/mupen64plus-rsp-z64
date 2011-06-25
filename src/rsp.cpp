@@ -201,6 +201,7 @@ UINT32 get_cop0_reg(int reg)
     else
     {
         log(M64MSG_ERROR, "RSP: get_cop0_reg: %d", reg);
+	return ~0;
     }
 }
 

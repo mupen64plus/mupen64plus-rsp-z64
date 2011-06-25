@@ -238,7 +238,7 @@ static void rsp_gen(int pc)
                 loopc = (pc+4)&0xfff;
             }
             if (delayed.op) {
-                int addop;
+                int addop = 0;
                 const UINT32 op = delayed.op;
                 switch (delayed.op2) {
                 case RSP_BLTZ:
