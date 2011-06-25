@@ -387,7 +387,7 @@ static __inline__ unsigned long long RDTSC(void)
 // }
 // #define RDTSC1(n) __asm__ __volatile__("rdtsc" : "=a" (n): )
 // #define RDTSC2(n) __asm__ __volatile__ ("rdtsc\nmov %%edx,%%eax" : "=a" (n): )
-// inline void RDTSC(uint64_t& a) { uint32_t b, c; RDTSC1(b); RDTSC2(c); \
+// inline void RDTSC(uint64_t& a) { uint32_t b, c; RDTSC1(b); RDTSC2(c);
 //  a = (((uint64_t)c)<<32) | b; }
 #elif defined(INTEL86) && defined WIN32
 #define rdtsc __asm __emit 0fh __asm __emit 031h
