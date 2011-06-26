@@ -97,7 +97,7 @@ endif
 # base CFLAGS, LIBS, and LDFLAGS
 CFLAGS += -ffast-math -fno-strict-aliasing -fvisibility=hidden -I../../src
 CXXFLAGS += -fvisibility-inlines-hidden
-LDFLAGS += -ldl
+LDFLAGS += 
 
 # Since we are building a shared library, we must compile with -fPIC for x86_64 CPUs.
 # On 32-bit systems we do not want to use -fPIC because we don't have to and it has a big performance penalty on this arch
@@ -116,16 +116,19 @@ endif
 # set special flags per-system
 ifeq ($(OS), LINUX)
   # only export api symbols
-  LDFLAGS += -Wl,-version-script,$(SRCDIR)/rsp_api_export.ver
+  LDFLAGS += -ldl -Wl,-version-script,$(SRCDIR)/rsp_api_export.ver
+endif
+ifeq ($(OS), FREEBSD)
+  LDFLAGS += -lc
 endif
 ifeq ($(OS), OSX)
   ifeq ($(CPU), X86)
     ifeq ($(ARCH_DETECTED), 64BITS)
       CFLAGS += -pipe -O3 -arch x86_64 -mmacosx-version-min=10.5 -isysroot /Developer/SDKs/MacOSX10.5.sdk
-      LDFLAGS += -arch x86_64
+      LDFLAGS += -arch x86_64 -ldl
     else
       CFLAGS += -pipe -O3 -mmmx -msse -fomit-frame-pointer -arch i686 -mmacosx-version-min=10.5 -isysroot /Developer/SDKs/MacOSX10.5.sdk
-      LDFLAGS += -arch i686
+      LDFLAGS += -arch i686 -ldl
     endif
   endif
 endif
