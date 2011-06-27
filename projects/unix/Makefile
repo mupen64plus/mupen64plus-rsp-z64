@@ -94,10 +94,10 @@ ifeq ("$(CPU)","NONE")
   $(error CPU type "$(HOST_CPU)" not supported.  Please file bug report at 'http://code.google.com/p/mupen64plus/issues')
 endif
 
-# base CFLAGS, LIBS, and LDFLAGS
+# base CFLAGS, LDLIBS, and LDFLAGS
 CFLAGS += -ffast-math -fno-strict-aliasing -fvisibility=hidden -I../../src
 CXXFLAGS += -fvisibility-inlines-hidden
-LDFLAGS += 
+LDFLAGS += $(SHARED)
 
 # Since we are building a shared library, we must compile with -fPIC for x86_64 CPUs.
 # On 32-bit systems we do not want to use -fPIC because we don't have to and it has a big performance penalty on this arch
@@ -116,19 +116,22 @@ endif
 # set special flags per-system
 ifeq ($(OS), LINUX)
   # only export api symbols
-  LDFLAGS += -ldl -Wl,-version-script,$(SRCDIR)/rsp_api_export.ver
+  LDFLAGS += -Wl,-version-script,$(SRCDIR)/rsp_api_export.ver
+  LDLIBS += -ldl
 endif
 ifeq ($(OS), FREEBSD)
-  LDFLAGS += -lc
+  LDLIBS += -lc
 endif
 ifeq ($(OS), OSX)
   ifeq ($(CPU), X86)
     ifeq ($(ARCH_DETECTED), 64BITS)
       CFLAGS += -pipe -O3 -arch x86_64 -mmacosx-version-min=10.5 -isysroot /Developer/SDKs/MacOSX10.5.sdk
-      LDFLAGS += -arch x86_64 -ldl
+      LDFLAGS += -arch x86_64
+      LDLIBS += -ldl
     else
       CFLAGS += -pipe -O3 -mmmx -msse -fomit-frame-pointer -arch i686 -mmacosx-version-min=10.5 -isysroot /Developer/SDKs/MacOSX10.5.sdk
-      LDFLAGS += -arch i686 -ldl
+      LDFLAGS += -arch i686
+      LDLIBS += -ldl
     endif
   endif
 endif
@@ -155,10 +158,25 @@ else
   endif
 endif
 
-# set shell function names
-CC      ?= gcc
-CXX     ?= g++
-INSTALL ?= install
+# reduced compile output when running make without V=1
+ifneq ($(findstring $(MAKEFLAGS),s),s)
+ifndef V
+	Q_CC  = @echo '    CC  '$@;
+	Q_CXX = @echo '    CXX '$@;
+	Q_LD  = @echo '    LD  '$@;
+endif
+endif
+
+# set base program pointers and flags
+CC       ?= gcc
+CXX      ?= g++
+RM       ?= rm -f
+INSTALL  ?= install
+MKDIR ?= mkdir -p
+COMPILE.c = $(Q_CC)$(CC) $(CFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -c
+COMPILE.cc = $(Q_CXX)$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -c
+LINK.o = $(Q_LD)$(CXX) $(LDFLAGS) $(TARGET_ARCH)
+
 ifeq ($(OS),OSX)
   STRIP	?= strip -x 
 else
@@ -197,7 +215,7 @@ SOURCE = \
 OBJECTS := $(patsubst $(SRCDIR)/%.c, $(OBJDIR)/%.o, $(filter %.c, $(SOURCE)))
 OBJECTS += $(patsubst $(SRCDIR)/%.cpp, $(OBJDIR)/%.o, $(filter %.cpp, $(SOURCE)))
 OBJDIRS = $(dir $(OBJECTS))
-$(shell mkdir -p $(OBJDIRS))
+$(shell $(MKDIR) $(OBJDIRS))
 
 # build targets
 TARGET = mupen64plus-rsp-z64.$(SO_EXTENSION)
@@ -229,11 +247,10 @@ install: $(TARGET)
 	$(INSTALL) -m 0644 $(TARGET) "$(DESTDIR)$(PLUGINDIR)"
 
 uninstall:
-	rm -f "$(DESTDIR)$(PLUGINDIR)/$(TARGET)"
+	$(RM) "$(DESTDIR)$(PLUGINDIR)/$(TARGET)"
 
 clean:
-	rm -rf ./_obj/* $(TARGET)
-	rmdir ./_obj
+	$(RM) -r ./_obj $(TARGET)
 
 rebuild: clean all
 
@@ -243,23 +260,15 @@ CFLAGS += -MD
 
 CXXFLAGS += $(CFLAGS)
 
-# reduced compile output when running make without V=1
-ifneq ($(findstring $(MAKEFLAGS),s),s)
-ifndef V
-	Q_CC  = @echo '    CC  '$@;
-	Q_CXX = @echo '    CXX '$@;
-	Q_LD  = @echo '    LD  '$@;
-endif
-endif
-
-# build rules
-
-$(TARGET): $(OBJECTS)
-	$(Q_LD)$(CXX) $(SHARED) $^ $(LDFLAGS) -o $@
-	$(STRIP) $@
-
+# standard build rules
 $(OBJDIR)/%.o: $(SRCDIR)/%.c
-	$(Q_CC)$(CC) -o $@ $(CFLAGS) -c $<
+	$(COMPILE.c) -o $@ $<
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.cpp
-	$(Q_CXX)$(CXX) -o $@ $(CXXFLAGS) -c $<
+	$(COMPILE.cc) -o $@ $<
+
+$(TARGET): $(OBJECTS)
+	$(LINK.o) $^ $(LOADLIBES) $(LDLIBS) -o $@
+	$(STRIP) $@
+
+.PHONY: all clean install uninstall targets
