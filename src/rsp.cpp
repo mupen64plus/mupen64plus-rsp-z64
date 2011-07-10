@@ -2423,7 +2423,7 @@ void handle_vector_ops(UINT32 op)
             else
             {
                 int negative = 0;
-                if (sqr < 0)
+                if (sqr > 0x7fffffff)
                 {
                     if (((UINT32)(sqr & 0xffff0000) == 0xffff0000) && ((INT16)(sqr & 0xffff) < 0))
                     {
