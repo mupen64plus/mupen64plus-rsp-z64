@@ -2836,9 +2836,13 @@ int rsp_execute(int cycles)
 /*****************************************************************************/
 
 
+enum sp_dma_direction
+{
+	SP_DMA_RDRAM_TO_IDMEM,
+	SP_DMA_IDMEM_TO_RDRAM
+};
 
-
-static void sp_dma(int direction)
+static void sp_dma(enum sp_dma_direction direction)
 {
     UINT8 *src, *dst;
     int i, j;
@@ -2847,21 +2851,12 @@ static void sp_dma(int direction)
     int skip;
 
 
-    INT32 l = sp_dma_length;
-
-    if (direction)
-    {
-        length = ((l & 0xfff) | 3) + 1;
-    }
-    else
-    {
-        length = ((l & 0xfff) | 7) + 1;
-    }
-
+    UINT32 l = sp_dma_length;
+    length = ((l & 0xfff) | 7) + 1;
     skip = (l >> 20) + length;
     count = ((l >> 12) & 0xff) + 1;
 
-    if (direction == 0)             // RDRAM -> I/DMEM
+    if (direction == SP_DMA_RDRAM_TO_IDMEM) // RDRAM -> I/DMEM
     {
         //UINT32 src_address = sp_dram_addr & ~7;
         //UINT32 dst_address = (sp_mem_addr & 0x1000) ? 0x4001000 : 0x4000000;
@@ -2884,7 +2879,7 @@ static void sp_dma(int direction)
         *z64_rspinfo.SP_DMA_BUSY_REG = 0;
         *z64_rspinfo.SP_STATUS_REG  &= ~SP_STATUS_DMABUSY;
     }
-    else                                    // I/DMEM -> RDRAM
+    else if (direction == SP_DMA_IDMEM_TO_RDRAM) // I/DMEM -> RDRAM
     {
         //UINT32 dst_address = sp_dram_addr & ~7;
         //UINT32 src_address = (sp_mem_addr & 0x1000) ? 0x4001000 : 0x4000000;
@@ -2969,7 +2964,7 @@ void n64_sp_reg_w(UINT32 offset, UINT32 data, UINT32 dummy)
             //                              sp_dma_count = (data >> 12) & 0xff;
             //                              sp_dma_skip = (data >> 20) & 0xfff;
             sp_dma_length=data;
-            sp_dma(0);
+            sp_dma(SP_DMA_RDRAM_TO_IDMEM);
             break;
 
         case 0x0c/4:            // SP_WR_LEN_REG
@@ -2977,7 +2972,7 @@ void n64_sp_reg_w(UINT32 offset, UINT32 data, UINT32 dummy)
             //                              sp_dma_count = (data >> 12) & 0xff;
             //                              sp_dma_skip = (data >> 20) & 0xfff;
             sp_dma_length=data;
-            sp_dma(1);
+            sp_dma(SP_DMA_IDMEM_TO_RDRAM);
             break;
 
         case 0x10/4:            // SP_STATUS_REG
