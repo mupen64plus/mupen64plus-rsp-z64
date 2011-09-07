@@ -135,10 +135,14 @@ extern "C" {
 
     EXPORT unsigned int CALL DoRspCycles(unsigned int Cycles)
     {
+        //#define VIDEO_HLE_ALLOWED
         //#define AUDIO_HLE_ALLOWED
-#ifdef AUDIO_HLE_ALLOWED
-        DWORD TaskType = *(DWORD*)(z64_rspinfo.DMEM + 0xFC0);
 
+#if defined (AUDIO_HLE_ALLOWED) || defined (VIDEO_HLE_ALLOWED)
+        unsigned int TaskType = *(unsigned int *)(z64_rspinfo.DMEM + 0xFC0);
+#endif
+
+#ifdef VIDEO_HLE_ALLOWED
 #if 0
         if (TaskType == 1) {
             SDL_Event event;
@@ -157,25 +161,27 @@ extern "C" {
         }
 #endif
 
-        // if (TaskType == 1) {
-        //   if (z64_rspinfo.ProcessDList != NULL) {
-        //     z64_rspinfo.ProcessDList();
-        //   }
-        //   *z64_rspinfo.SP_STATUS_REG |= (0x0203 );
-        //   if ((*z64_rspinfo.SP_STATUS_REG & SP_STATUS_INTR_BREAK) != 0 ) {
-        //     *z64_rspinfo.MI_INTR_REG |= R4300i_SP_Intr;
-        //     z64_rspinfo.CheckInterrupts();
-        //   }
-
-        // *z64_rspinfo.DPC_STATUS_REG &= ~0x0002;
-        // return Cycles;
-        //   }
-
-        if (TaskType == 2) {
-            if (z64_rspinfo.ProcessAList != NULL) {
-                z64_rspinfo.ProcessAList();
+        if (TaskType == 1) {
+            if (z64_rspinfo.ProcessDlistList != NULL) {
+                z64_rspinfo.ProcessDlistList();
             }
-            *z64_rspinfo.SP_STATUS_REG |= (0x0203 );
+            *z64_rspinfo.SP_STATUS_REG |= (0x0203);
+            if ((*z64_rspinfo.SP_STATUS_REG & SP_STATUS_INTR_BREAK) != 0 ) {
+                *z64_rspinfo.MI_INTR_REG |= R4300i_SP_Intr;
+                z64_rspinfo.CheckInterrupts();
+            }
+
+            *z64_rspinfo.DPC_STATUS_REG &= ~0x0002;
+            return Cycles;
+        }
+#endif
+
+#ifdef AUDIO_HLE_ALLOWED
+        if (TaskType == 2) {
+            if (z64_rspinfo.ProcessAlistList != NULL) {
+                z64_rspinfo.ProcessAlistList();
+            }
+            *z64_rspinfo.SP_STATUS_REG |= (0x0203);
             if ((*z64_rspinfo.SP_STATUS_REG & SP_STATUS_INTR_BREAK) != 0 ) {
                 *z64_rspinfo.MI_INTR_REG |= R4300i_SP_Intr;
                 z64_rspinfo.CheckInterrupts();
@@ -183,6 +189,7 @@ extern "C" {
             return Cycles;
         }  
 #endif
+
         if (z64_rspinfo.CheckInterrupts==NULL)
             log(M64MSG_WARNING, "Emulator doesn't provide CheckInterrupts routine");
         return rsp_execute(0x100000);

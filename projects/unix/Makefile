@@ -73,23 +73,31 @@ ifneq ("$(filter x86_64 amd64,$(HOST_CPU))","")
   CPU := X86
   ifeq ("$(BITS)", "32")
     ARCH_DETECTED := 64BITS_32
+    PIC ?= 0
   else
     ARCH_DETECTED := 64BITS
+    PIC ?= 1
   endif
 endif
 ifneq ("$(filter pentium i%86,$(HOST_CPU))","")
   CPU := X86
   ARCH_DETECTED := 32BITS
+  PIC ?= 0
 endif
-# PPC doesn't work yet
-#ifneq ("$(filter ppc powerpc,$(HOST_CPU))","")
-#  CPU := PPC
-#  ARCH_DETECTED := 32BITS
-#endif
-#ifneq ("$(filter ppc64 powerpc64,$(HOST_CPU))","")
-#  CPU := PPC
-#  ARCH_DETECTED := 64BITS
-#endif
+ifneq ("$(filter ppc powerpc,$(HOST_CPU))","")
+  CPU := PPC
+  ARCH_DETECTED := 32BITS
+  BIG_ENDIAN := 1
+  PIC ?= 1
+  $(warning Architecture "$(HOST_CPU)" not officially supported.')
+endif
+ifneq ("$(filter ppc64 powerpc64,$(HOST_CPU))","")
+  CPU := PPC
+  ARCH_DETECTED := 64BITS
+  BIG_ENDIAN := 1
+  PIC ?= 1
+  $(warning Architecture "$(HOST_CPU)" not officially supported.')
+endif
 ifeq ("$(CPU)","NONE")
   $(error CPU type "$(HOST_CPU)" not supported.  Please file bug report at 'http://code.google.com/p/mupen64plus/issues')
 endif
@@ -100,14 +108,21 @@ CFLAGS += $(OPTFLAGS) -ffast-math -fno-strict-aliasing -fvisibility=hidden -I../
 CXXFLAGS += -fvisibility-inlines-hidden
 LDFLAGS += $(SHARED)
 
-# Since we are building a shared library, we must compile with -fPIC for x86_64 CPUs.
-# On 32-bit systems we do not want to use -fPIC because we don't have to and it has a big performance penalty on this arch
-ifeq ($(ARCH_DETECTED), 64BITS)
-  PIC ?= 1
-endif
+# Since we are building a shared library, we must compile with -fPIC on some architectures
+# On 32-bit x86 systems we do not want to use -fPIC because we don't have to and it has a big performance penalty on this arch
 ifeq ($(PIC), 1)
   CFLAGS += -fPIC
   LDFLAGS += -fPIC
+endif
+
+HLE=
+ifeq ($(HLEVIDEO), 1)
+  CFLAGS += -DVIDEO_HLE_ALLOWED
+  HLE = -hlevideo
+endif
+
+ifeq ($(BIG_ENDIAN), 1)
+  CFLAGS += -DM64P_BIG_ENDIAN
 endif
 
 # tweak flags for 32-bit build on 64-bit system
@@ -183,16 +198,12 @@ COMPILE.c = $(Q_CC)$(CC) $(CFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -c
 COMPILE.cc = $(Q_CXX)$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -c
 LINK.o = $(Q_LD)$(CXX) $(LDFLAGS) $(TARGET_ARCH)
 
-ifeq ($(OS),OSX)
-  STRIP	?= strip -x 
-else
-  STRIP	?= strip -s
-endif
-
 # set special flags for given Makefile parameters
 ifeq ($(DEBUG),1)
   CFLAGS += -g
-  STRIP = true # disable binary strip
+  INSTALL_STRIP_FLAG ?= 
+else
+  INSTALL_STRIP_FLAG ?= -s
 endif
 
 # set installation options
@@ -207,7 +218,7 @@ ifeq ($(PLUGINDIR),)
 endif
 
 SRCDIR = ../../src
-OBJDIR = _obj
+OBJDIR = _obj$(HLE)
 
 # list of source files to compile
 SOURCE = \
@@ -224,7 +235,7 @@ OBJDIRS = $(dir $(OBJECTS))
 $(shell $(MKDIR) $(OBJDIRS))
 
 # build targets
-TARGET = mupen64plus-rsp-z64.$(SO_EXTENSION)
+TARGET = mupen64plus-rsp-z64$(HLE).$(SO_EXTENSION)
 
 targets:
 	@echo "Mupen64Plus-rsp-z64 makefile. "
@@ -239,6 +250,7 @@ targets:
 	@echo "    APIDIR=path   == path to find Mupen64Plus Core headers"
 	@echo "    OPTFLAGS=flag == compiler optimization (default: -O3)"
 	@echo "    PIC=(1|0)     == Force enable/disable of position independent code"
+	@echo "    HLEVIDEO=(1|0) == Move task of gfx emulation to a HLE video plugins"
 	@echo "  Install Options:"
 	@echo "    PREFIX=path   == install/uninstall prefix (default: /usr/local)"
 	@echo "    LIBDIR=path   == library prefix (default: PREFIX/lib)"
@@ -252,13 +264,13 @@ all: $(TARGET)
 
 install: $(TARGET)
 	$(INSTALL) -d "$(DESTDIR)$(PLUGINDIR)"
-	$(INSTALL) -m 0644 $(TARGET) "$(DESTDIR)$(PLUGINDIR)"
+	$(INSTALL) -m 0644 $(INSTALL_STRIP_FLAG) $(TARGET) "$(DESTDIR)$(PLUGINDIR)"
 
 uninstall:
 	$(RM) "$(DESTDIR)$(PLUGINDIR)/$(TARGET)"
 
 clean:
-	$(RM) -r ./_obj $(TARGET)
+	$(RM) -r ./_obj$(HLE) $(TARGET)
 
 rebuild: clean all
 
@@ -277,6 +289,5 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.cpp
 
 $(TARGET): $(OBJECTS)
 	$(LINK.o) $^ $(LOADLIBES) $(LDLIBS) -o $@
-	$(STRIP) $@
 
 .PHONY: all clean install uninstall targets
