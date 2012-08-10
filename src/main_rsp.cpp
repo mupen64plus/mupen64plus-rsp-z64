@@ -23,7 +23,7 @@
 #include <assert.h>
 #include <stdarg.h>
 
-#define RSP_Z64_VERSION        0x016304
+#define RSP_Z64_VERSION        0x016305
 #define RSP_PLUGIN_API_VERSION 0x020000
 
 static void (*l_DebugCallback)(void *, int, const char *) = NULL;
