@@ -61,6 +61,11 @@ ifneq ("$(filter GNU/kFreeBSD kfreebsd,$(UNAME))","")
   SO_EXTENSION = so
   SHARED = -shared
 endif
+ifeq ("$(patsubst MINGW%,MINGW,$(UNAME))","MINGW")
+  OS = MINGW
+  SO_EXTENSION = dll
+  SHARED = -shared
+endif
 ifeq ("$(OS)","NONE")
   $(error OS type "$(UNAME)" not supported.  Please file bug report at 'http://code.google.com/p/mupen64plus/issues')
 endif
