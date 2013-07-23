@@ -26,6 +26,16 @@
 #define RSP_Z64_VERSION        0x020000
 #define RSP_PLUGIN_API_VERSION 0x020000
 
+#if defined(VIDEO_HLE_ALLOWED) && defined(AUDIO_HLE_ALLOWED)
+#define L_NAME "Z64 RSP Plugin (HLE)"
+#elif defined(VIDEO_HLE_ALLOWED)
+#define L_NAME "Z64 RSP Plugin (MLE)"
+#elif defined(AUDIO_HLE_ALLOWED)
+#define L_NAME "Z64 RSP Plugin (LLE)"
+#else
+#define L_NAME "Z64 RSP Plugin"
+#endif
+
 static void (*l_DebugCallback)(void *, int, const char *) = NULL;
 static void *l_DebugCallContext = NULL;
 static bool l_PluginInit = false;
@@ -123,7 +133,7 @@ extern "C" {
             *APIVersion = RSP_PLUGIN_API_VERSION;
 
         if (PluginNamePtr != NULL)
-            *PluginNamePtr = "Z64 RSP Plugin";
+            *PluginNamePtr = L_NAME;
 
         if (Capabilities != NULL)
         {
