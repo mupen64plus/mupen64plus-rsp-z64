@@ -1,6 +1,6 @@
 #/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 # *   mupen64plus-rsp-z64 - Makefile                                        *
-# *   http://bitbucket.org/wahrhaft/mupen64plus-rsp-z64/                    *
+# *   https://github.com/mupen64plus/mupen64plus-rsp-z64/                   *
 # *   Copyright (C) 2010 Jon Ring                                           *
 # *   Copyright (C) 2008-2009 Richard Goedeken                              *
 # *   Copyright (C) 2007-2008 DarkJeztr Tillin9                             *
