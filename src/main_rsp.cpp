@@ -19,9 +19,10 @@
  *
 **/
 
-#include "rsp.h"
 #include <assert.h>
 #include <stdarg.h>
+
+#include "rsp.h"
 
 #define RSP_Z64_VERSION        0x020000
 #define RSP_PLUGIN_API_VERSION 0x020000

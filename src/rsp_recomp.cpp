@@ -19,8 +19,9 @@
  *
 **/
 
-#include "rsp_recomp.h"
 #include <assert.h>
+
+#include "rsp_recomp.h"
 
 #define GENDEBUG
 
