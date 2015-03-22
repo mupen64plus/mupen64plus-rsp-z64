@@ -19,9 +19,15 @@
  *
 **/
 
-#include "rsp.h"
 #include <assert.h>
 #include <stdarg.h>
+#include <stdio.h>
+#include <string.h>
+
+#include "m64p_plugin.h"
+#include "m64p_types.h"
+#include "rsp.h"
+#include "z64.h"
 
 #define RSP_Z64_VERSION        0x020000
 #define RSP_PLUGIN_API_VERSION 0x020000

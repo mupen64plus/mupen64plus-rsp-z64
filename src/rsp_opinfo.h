@@ -20,6 +20,7 @@
 **/
 
 #include "rsp.h"
+#include "z64.h"
 
 struct rsp_regmask_t {
     //UINT32 r;

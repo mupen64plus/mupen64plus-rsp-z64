@@ -28,7 +28,9 @@
 //#include "z64.h"
 #include <stdarg.h>
 #include <stdio.h>
+
 #include "rsp.h"
+#include "z64.h"
 
 #define DASMFLAG_SUPPORTED         0x80000000      /* are disassembly flags supported? */
 #define DASMFLAG_STEP_OUT          0x40000000      /* this instruction should be the end of a step out sequence */

@@ -19,12 +19,13 @@
  *
 **/
 
-#include "rsp.h"
+#include <assert.h>
 #include <dlfcn.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
-#include <assert.h>
+
+#include "rsp.h"
 
 #define GENDEBUG
 

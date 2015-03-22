@@ -23,13 +23,14 @@
 #define _RSP_H_
 
 #define M64P_PLUGIN_PROTOTYPES 1
-#include "m64p_types.h"
-#include "m64p_plugin.h"
-#include "z64.h"
 #include <math.h>       // sqrt
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>    // memset
+
+#include "m64p_plugin.h"
+#include "m64p_types.h"
+#include "z64.h"
 
 #define INLINE inline
 
@@ -412,6 +413,7 @@ inline uint64_t RDTSC() {
 #ifdef GENTRACE
 #undef GENTRACE
 #include <stdarg.h>
+
 inline void GENTRACE(const char * s, ...) {
     va_list ap;
     va_start(ap, s);

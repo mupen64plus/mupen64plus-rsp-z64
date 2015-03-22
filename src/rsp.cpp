@@ -19,6 +19,10 @@
  *
 **/
 
+#include <assert.h>
+#include <math.h>       // sqrt
+#include <string.h>
+
 /*
 Nintendo/SGI Reality Signal Processor (RSP) emulator
 
@@ -27,9 +31,6 @@ Written by Ville Linde
 // #include "z64.h"
 #include "rsp.h"
 #include "rsp_opinfo.h"
-#include <math.h>       // sqrt
-#include <assert.h>
-#include <string.h>
 
 #define INLINE inline
 

@@ -19,6 +19,10 @@
  *
 **/
 
+#include <string.h>
+
+#include "m64p_types.h"
+#include "rsp.h"
 #include "rsp_opinfo.h"
 
 static const int vector_elements_2[16][8] =

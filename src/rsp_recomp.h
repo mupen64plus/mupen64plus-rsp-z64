@@ -20,6 +20,7 @@
 **/
 
 #include "rsp_opinfo.h"
+#include "z64.h"
 
 struct rsp_bc_t {
     UINT32        op;   // original opcode

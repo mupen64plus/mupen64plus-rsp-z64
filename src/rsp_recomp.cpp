@@ -19,8 +19,14 @@
  *
 **/
 
-#include "rsp_recomp.h"
 #include <assert.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "m64p_plugin.h"
+#include "m64p_types.h"
+#include "rsp.h"
+#include "rsp_recomp.h"
 
 #define GENDEBUG
 
