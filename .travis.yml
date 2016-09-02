@@ -1,3 +1,5 @@
+sudo: required
+dist: trusty
 language: cpp
 compiler:
   - gcc
@@ -10,4 +12,4 @@ env:
  - HLEVIDEO=0
  - HLEVIDEO=1
 script:
- - make -C projects/unix APIDIR="$(pwd)/deps/mupen64plus-core/src/api/" V=1 clean && CPPFLAGS="-D__extern_always_inline=inline" LDFLAGS="-Wl,--no-add-needed -Wl,--no-undefined" OPTFLAGS="-O2" make CC="${CC}" CXX="${CXX}" -j$(nproc) -C projects/unix APIDIR="$(pwd)/deps/mupen64plus-core/src/api/" V=1 all
+ - make -C projects/unix APIDIR="$(pwd)/deps/mupen64plus-core/src/api/" V=1 clean && LDFLAGS="-Wl,--no-add-needed -Wl,--no-undefined" OPTFLAGS="-O2" make CC="${CC}" CXX="${CXX}" -j$(nproc) -C projects/unix APIDIR="$(pwd)/deps/mupen64plus-core/src/api/" V=1 all
