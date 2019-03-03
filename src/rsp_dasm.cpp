@@ -40,6 +40,12 @@
 #define DASMFLAG_LENGTHMASK        0x0000ffff      /* the low 16-bits contain the actual length */
 #define DASMFLAG_STEP_OVER_EXTRA(x) ((x) << DASMFLAG_OVERINSTSHIFT)
 
+#if defined(__GNUC__)
+#define ATTR_FMT(fmtpos, attrpos) __attribute__ ((format (printf, fmtpos, attrpos)))
+#else
+#define ATTR_FMT(fmtpos, attrpos)
+#endif
+
 static const char *reg[32] =
 {
         "0",    "r1",   "r2",   "r3",   "r4",   "r5",   "r6",   "r7",
@@ -100,7 +106,9 @@ INLINE char *signed_imm16(UINT32 op)
 
 static char *output;
 
-static void print(const char *fmt, ...)
+static void print(const char *fmt, ...) ATTR_FMT(1, 2);
+
+void print(const char *fmt, ...)
 {
         va_list vl;
 

@@ -34,7 +34,13 @@
 
 #define INLINE inline
 
-extern void log(m64p_msg_level level, const char *msg, ...);
+#if defined(__GNUC__)
+#define ATTR_FMT(fmtpos, attrpos) __attribute__ ((format (printf, fmtpos, attrpos)))
+#else
+#define ATTR_FMT(fmtpos, attrpos)
+#endif
+
+extern void log(m64p_msg_level level, const char *msg, ...) ATTR_FMT(2, 3);
 
 /* defined in systems/n64.c */
 #define rdram ((UINT32*)z64_rspinfo.RDRAM)
@@ -414,7 +420,10 @@ inline uint64_t RDTSC() {
 #undef GENTRACE
 #include <stdarg.h>
 
-inline void GENTRACE(const char * s, ...) {
+inline void GENTRACE(const char * s, ...) ATTR_FMT(1, 2);
+
+void GENTRACE(const char * s, ...)
+{
     va_list ap;
     va_start(ap, s);
     vfprintf(stderr, s, ap);
