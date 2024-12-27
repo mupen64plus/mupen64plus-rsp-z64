@@ -121,9 +121,9 @@ ifeq ("$(CPU)","NONE")
   $(error CPU type "$(HOST_CPU)" not supported.  Please file bug report at 'https://github.com/mupen64plus/mupen64plus-core/issues')
 endif
 
+HLEVIDEO ?= 0
 ifeq ($(HLEVIDEO), 1)
-  CFLAGS += -DVIDEO_HLE_ALLOWED
-  POSTFIX = -hlevideo
+  CFLAGS += -DHLEVIDEO
 endif
 
 SRCDIR = ../../src
@@ -270,6 +270,14 @@ SOURCE = \
 	$(SRCDIR)/rsp_dasm.cpp \
 	$(SRCDIR)/main_rsp.cpp 
 
+ifeq ($(OS), MINGW)
+SOURCE += \
+	$(SRCDIR)/osal_dynamiclib_win32.c
+else
+SOURCE += \
+	$(SRCDIR)/osal_dynamiclib_unix.c
+endif
+
 # generate a list of object files build, make a temporary directory for them
 OBJECTS := $(patsubst $(SRCDIR)/%.c, $(OBJDIR)/%.o, $(filter %.c, $(SOURCE)))
 OBJECTS += $(patsubst $(SRCDIR)/%.cpp, $(OBJDIR)/%.o, $(filter %.cpp, $(SOURCE)))
@@ -314,7 +322,7 @@ uninstall:
 	$(RM) "$(DESTDIR)$(PLUGINDIR)/$(TARGET)"
 
 clean:
-	$(RM) -r _obj _obj-hlevideo $(OBJDIR) mupen64plus-rsp-z64*.$(SO_EXTENSION) $(TARGET)
+	$(RM) -r _obj $(OBJDIR) mupen64plus-rsp-z64*.$(SO_EXTENSION) $(TARGET)
 
 rebuild: clean all
 

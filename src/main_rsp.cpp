@@ -24,27 +24,57 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "m64p_config.h"
+#include "m64p_frontend.h"
 #include "m64p_plugin.h"
 #include "m64p_types.h"
+#include "osal_dynamiclib.h"
 #include "rsp.h"
 #include "z64.h"
 
 #define RSP_Z64_VERSION        0x020000
 #define RSP_PLUGIN_API_VERSION 0x020000
 
-#if defined(VIDEO_HLE_ALLOWED) && defined(AUDIO_HLE_ALLOWED)
-#define L_NAME "Z64 RSP Plugin (HLE)"
-#elif defined(VIDEO_HLE_ALLOWED)
-#define L_NAME "Z64 RSP Plugin (MLE)"
-#elif defined(AUDIO_HLE_ALLOWED)
-#define L_NAME "Z64 RSP Plugin (LLE)"
-#else
+#define CONFIG_API_VERSION       0x020100
+#define CONFIG_PARAM_VERSION     1.00
+
 #define L_NAME "Z64 RSP Plugin"
-#endif
 
 static void (*l_DebugCallback)(void *, int, const char *) = NULL;
 static void *l_DebugCallContext = NULL;
-static bool l_PluginInit = false;
+static int l_PluginInit = 0;
+static m64p_handle l_ConfigRsp;
+
+ptr_ConfigOpenSection      ConfigOpenSection = NULL;
+ptr_ConfigDeleteSection    ConfigDeleteSection = NULL;
+ptr_ConfigSetParameter     ConfigSetParameter = NULL;
+ptr_ConfigGetParameter     ConfigGetParameter = NULL;
+ptr_ConfigSetDefaultFloat  ConfigSetDefaultFloat;
+ptr_ConfigSetDefaultBool   ConfigSetDefaultBool = NULL;
+ptr_ConfigGetParamBool     ConfigGetParamBool = NULL;
+ptr_CoreDoCommand          CoreDoCommand = NULL;
+
+bool CFG_HLE_GFX = 0;
+bool CFG_HLE_AUD = 0;
+
+#define ATTR_FMT(fmtpos, attrpos) __attribute__ ((format (printf, fmtpos, attrpos)))
+static void DebugMessage(int level, const char *message, ...) ATTR_FMT(2, 3);
+
+void DebugMessage(int level, const char *message, ...)
+{
+    char msgbuf[1024];
+    va_list args;
+
+    if (l_DebugCallback == NULL)
+        return;
+
+    va_start(args, message);
+    vsprintf(msgbuf, message, args);
+
+    (*l_DebugCallback)(l_DebugCallContext, level, msgbuf);
+
+    va_end(args);
+}
 
 #if 0
 static void dump()
@@ -99,6 +129,7 @@ extern "C" {
     EXPORT m64p_error CALL PluginStartup(m64p_dynlib_handle CoreLibHandle, void *Context,
         void (*DebugCallback)(void *, int, const char *))
     {
+        float fConfigParamsVersion = 0.0f;
 
         if (l_PluginInit)
             return M64ERR_ALREADY_INIT;
@@ -107,9 +138,60 @@ extern "C" {
         l_DebugCallback = DebugCallback;
         l_DebugCallContext = Context;
 
-        ///* this plugin doesn't use any Core library functions (ex for Configuration), so no need to keep the CoreLibHandle */
+        ///* Get the core config function pointers from the library handle */
+        ConfigOpenSection = (ptr_ConfigOpenSection) osal_dynlib_getproc(CoreLibHandle, "ConfigOpenSection");
+        ConfigDeleteSection = (ptr_ConfigDeleteSection) osal_dynlib_getproc(CoreLibHandle, "ConfigDeleteSection");
+        ConfigSetParameter = (ptr_ConfigSetParameter) osal_dynlib_getproc(CoreLibHandle, "ConfigSetParameter");
+        ConfigGetParameter = (ptr_ConfigGetParameter) osal_dynlib_getproc(CoreLibHandle, "ConfigGetParameter");
+        ConfigSetDefaultFloat = (ptr_ConfigSetDefaultFloat) osal_dynlib_getproc(CoreLibHandle, "ConfigSetDefaultFloat");
+        ConfigSetDefaultBool = (ptr_ConfigSetDefaultBool) osal_dynlib_getproc(CoreLibHandle, "ConfigSetDefaultBool");
+        ConfigGetParamBool = (ptr_ConfigGetParamBool) osal_dynlib_getproc(CoreLibHandle, "ConfigGetParamBool");
+        CoreDoCommand = (ptr_CoreDoCommand) osal_dynlib_getproc(CoreLibHandle, "CoreDoCommand");
 
-        l_PluginInit = true;
+        if (!ConfigOpenSection || !ConfigDeleteSection || !ConfigSetParameter || !ConfigGetParameter ||
+            !ConfigSetDefaultBool || !ConfigGetParamBool || !ConfigSetDefaultFloat)
+            return M64ERR_INCOMPATIBLE;
+
+        ///* get a configuration section handle */
+        if (ConfigOpenSection("rsp-z64", &l_ConfigRsp) != M64ERR_SUCCESS)
+        {
+            DebugMessage(M64MSG_ERROR, "Couldn't open config section 'rsp-z64'");
+            return M64ERR_INPUT_NOT_FOUND;
+        }
+
+        ///* check the section version number */
+        if (ConfigGetParameter(l_ConfigRsp, "Version", M64TYPE_FLOAT, &fConfigParamsVersion, sizeof(float)) != M64ERR_SUCCESS)
+        {
+            DebugMessage(M64MSG_WARNING, "No version number in 'rsp-z64' config section. Setting defaults.");
+            ConfigDeleteSection("rsp-z64");
+            ConfigOpenSection("rsp-z64", &l_ConfigRsp);
+        }
+        else if (((int) fConfigParamsVersion) != ((int) CONFIG_PARAM_VERSION))
+        {
+            DebugMessage(M64MSG_WARNING, "Incompatible version %.2f in 'rsp-z64' config section: current is %.2f. Setting defaults.", fConfigParamsVersion, (float) CONFIG_PARAM_VERSION);
+            ConfigDeleteSection("rsp-z64");
+            ConfigOpenSection("rsp-z64", &l_ConfigRsp);
+        }
+        else if ((CONFIG_PARAM_VERSION - fConfigParamsVersion) >= 0.0001f)
+        {
+            ///* handle upgrades */
+            float fVersion = CONFIG_PARAM_VERSION;
+            ConfigSetParameter(l_ConfigRsp, "Version", M64TYPE_FLOAT, &fVersion);
+            DebugMessage(M64MSG_INFO, "Updating parameter set version in 'rsp-z64' config section to %.2f", fVersion);
+        }
+
+        #ifndef HLEVIDEO
+            int hlevideo = 0;
+        #else
+            int hlevideo = 1;
+        #endif
+
+        ///* set the default values for this plugin */
+        ConfigSetDefaultFloat(l_ConfigRsp, "Version", CONFIG_PARAM_VERSION,  "Mupen64Plus z64 RSP Plugin config parameter version number");
+        ConfigSetDefaultBool(l_ConfigRsp, "DisplayListToGraphicsPlugin", hlevideo, "Send display lists to the graphics plugin");
+        ConfigSetDefaultBool(l_ConfigRsp, "AudioListToAudioPlugin", 0, "Send audio lists to the audio plugin");
+
+        l_PluginInit = 1;
         return M64ERR_SUCCESS;
     }
 
@@ -151,14 +233,9 @@ extern "C" {
 
     EXPORT unsigned int CALL DoRspCycles(unsigned int Cycles)
     {
-        //#define VIDEO_HLE_ALLOWED
-        //#define AUDIO_HLE_ALLOWED
+        uint32_t TaskType = *(uint32_t*)(z64_rspinfo.DMEM + 0xFC0);
+        bool compareTaskType = *(uint32_t*)(z64_rspinfo.DMEM + 0x0ff0) != 0; /* Resident Evil 2, null task pointers */
 
-#if defined (AUDIO_HLE_ALLOWED) || defined (VIDEO_HLE_ALLOWED)
-        unsigned int TaskType = *(unsigned int *)(z64_rspinfo.DMEM + 0xFC0);
-#endif
-
-#ifdef VIDEO_HLE_ALLOWED
 #if 0
         if (TaskType == 1) {
             SDL_Event event;
@@ -177,7 +254,7 @@ extern "C" {
         }
 #endif
 
-        if (TaskType == 1) {
+        if (TaskType == 1 && compareTaskType && CFG_HLE_GFX != 0) {
             if (z64_rspinfo.ProcessDlistList != NULL) {
                 z64_rspinfo.ProcessDlistList();
             }
@@ -186,14 +263,10 @@ extern "C" {
                 *z64_rspinfo.MI_INTR_REG |= R4300i_SP_Intr;
                 z64_rspinfo.CheckInterrupts();
             }
-
-            *z64_rspinfo.DPC_STATUS_REG &= ~0x0002;
             return Cycles;
         }
-#endif
 
-#ifdef AUDIO_HLE_ALLOWED
-        if (TaskType == 2) {
+        if (TaskType == 2 && compareTaskType && CFG_HLE_AUD != 0) {
             if (z64_rspinfo.ProcessAlistList != NULL) {
                 z64_rspinfo.ProcessAlistList();
             }
@@ -204,7 +277,6 @@ extern "C" {
             }
             return Cycles;
         }  
-#endif
 
         if (z64_rspinfo.CheckInterrupts==NULL)
             log(M64MSG_WARNING, "Emulator doesn't provide CheckInterrupts routine");
@@ -214,6 +286,9 @@ extern "C" {
 
     EXPORT void CALL InitiateRSP(RSP_INFO Rsp_Info, unsigned int *CycleCount)
     {
+        CFG_HLE_GFX = ConfigGetParamBool(l_ConfigRsp, "DisplayListToGraphicsPlugin");
+        CFG_HLE_AUD = ConfigGetParamBool(l_ConfigRsp, "AudioListToAudioPlugin");
+
         log(M64MSG_STATUS, "INITIATE RSP");
         rsp_init(Rsp_Info);
         memset(((UINT32*)z64_rspinfo.DMEM), 0, 0x2000);
